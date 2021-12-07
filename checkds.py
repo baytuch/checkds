@@ -113,11 +113,20 @@ def check(zone, args, masterfile=None, lookaside=None):
     else:
         intods, _ = Popen([args.dig, "+noall", "+answer", "-t", "dnskey",
                            "-q", zone], stdout=PIPE).communicate()
+
         cmd = [args.dsfromkey, "-f", "-"]
         if lookaside:
             cmd += ["-l", lookaside]
         cmd.append(zone)
         fp, _ = Popen(cmd, stdin=PIPE, stdout=PIPE).communicate(intods)
+
+        cmd = [args.dsfromkey, "-a", "SHA-384", "-f", "-"]
+        if lookaside:
+            cmd += ["-l", lookaside]
+        cmd.append(zone)
+        fp_384, _ = Popen(cmd, stdin=PIPE, stdout=PIPE).communicate(intods)
+
+        fp += fp_384
 
     for line in fp.splitlines():
         klist.append(SECRR(line, lookaside))
